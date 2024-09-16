@@ -1,0 +1,113 @@
+#incluir <Wire.h>
+#incluir <DHT.h>
+#incluir <LiquidCrystal_I2C.h>
+#incluir <SoftwareSerial.h>
+#incluir "Reconocimiento de voz V3.h"
+
+// Definimos el pin digital donde se conecta el sensor DHT
+#define DHTPIN 10
+#define DHTTYPE DHT11  // Usaremos el DHT11
+
+LiquidCrystal_I2C lcd(0x27, 16, 2);  // Dirección del LCD y tamaño (16x2)
+DHT dht(DHTPIN, DHTTYPE);  // Inicializamos el sensor DHT
+
+VR myVR(2, 3);  // 3:RX 2:TX
+
+int led = 12; // LED conectado al pin 12
+int fan = 11;        // Ventilador conectado al pin 11
+int alarm = 13;      // Alarma conectada al pin 13
+
+void setup() {
+  myVR.begin(9600);  
+ Serial.begin (115200); 
+
+  if (myVR.clear() == 0) {
+ Serial.println ("Recognizador autorizado".); 
+ } más { 
+  Serial.println ("Módulo de reconocimiento de voz no encontrado. Compruebe la conexión".);  
+  mientras que (1);  
+ } 
+  
+    // Cargar los comandos de voz guardados en las posiciones 1 a 7  
+ myVR.load (uint8_t (1)); // Comando 1: Encender LED 
+  myVR.load(uint8_t(2));  // Comando 2: Apagar LED
+    myVR.load(uint8_t(3));  // Comando 3: Encender ventilador  
+  myVR.load(uint8_t(4));  // Comando 4: Apagar ventilador
+    myVR.load(uint8_t(5));  // Comando 5: Activar alarma  
+    myVR.load(uint8_t(6));  // Comando 6: Silenciar alarma  
+    myVR.load(uint8_t(7));  // Comando 7: Mostrar parámetros ambientales  
+  
+  pinMode(led, OUTPUT);
+  pinMode(fan, OUTPUT);
+  pinMode(alarm, OUTPUT);
+  
+  escritura digital (dirigida, ALTA);  
+ digitalWrite (fan, HIGH); 
+ digitalWrite (alarma, LOW); 
+
+    // Inicializamos la pantalla LCD y el sensor DHT  
+  lcd.begin(16, 2);
+  lcd.backlight();
+  dht.begin();
+}
+
+bucle vacío ()  {
+  uint8_t buf[64];
+ internet = myVR.reconocer (buf, 50); 
+
+  if (ret > 0) {
+ if (buf[1] == 1) { // Encender LED 
+ digitalWrite (dirigido, LOW); 
+ Serial.println ("LED ON"); 
+ } 
+ si (buf[1] == 2) { // Apagar LED 
+ escritura digital (dirigida, ALTA); 
+ Serial.println ("LED OFF"); 
+ } 
+ si (buf[1] == 3) { // Encender ventilador 
+ digitalWrite (fan, LOW); 
+ Serial.println ("Fan ON"); 
+ } 
+    else if (buf[1] == 4) {  // Apagar ventilador
+ digitalWrite (fan, HIGH); 
+ Serial.println ("Fan OFF"); 
+ } 
+      else if (buf[1] == 5) {  // Activar alarma  
+ escritura digital (alarma, ALTO); 
+ Serial.println ("Alarma ON"); 
+ } 
+ si (buf[1] == 6) { // Silenciar alarma 
+ digitalWrite (alarma, LOW); 
+ Serial.println ("Alarma apagada"); 
+ } 
+      else if (buf[1] == 7) {  // Mostrar parámetros ambientales  
+ temperatura del flotador = dht.readTemperature (); 
+ flotar humi = dht.readHumidity (); 
+
+      if (isnan(temp) || isnan(humi)) {
+ Serial.println ("¡No se leyó del sensor DHT!"); 
+ } más { 
+ lcd.clear (); 
+         lcd.setCursor(0, 0); 
+        lcd.print("Temp: ");
+        lcd.print(temp);
+        lcd.print(" C");
+
+         lcd.setCursor(0, 1); 
+        lcd.print("Humi: ");
+        lcd.print(humi);
+        lcd.print(" %");
+
+ Serial.println ("Parámetros ambientales mostrados en LCD"); 
+ } 
+       delay(20000);  // Muestra los datos durante 20 segundos 
+       lcd.clear();  // Luego limpia la pantalla LCD 
+ } 
+ más { 
+ Serial.println ("Orden no reconocida".); 
+ } 
+
+     // Pequeño delay para evitar interferencias 
+ retraso (100); 
+ } 
+ }
